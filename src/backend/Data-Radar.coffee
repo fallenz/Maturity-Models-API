@@ -7,10 +7,14 @@ class Data_Radar
     @.options      = options || {}
     @.score_Initial = 0
     @.score_Yes     = 1
-    @.score_Maybe   = 0.25
+    @.score_Most   = 0.66
+    @.score_Some   = 0.33
+    @.score_No   = 0
     @.score_Max     = 3
-    @.key_Yes       = 'Yes'
-    @.key_Maybe     = 'Maybe'
+    @.key_Yes       = 1
+    @.key_Most     = 0.66
+    @.key_Some     = 0.33
+    @.key_No     = ''
     @.data_Project  = new Data_Project()
     @.data_Team     = new Data_Team()
 
@@ -43,19 +47,27 @@ class Data_Radar
   map_Data: (radar_Fields, team_Data)=>
     calculate = (prefix)=>
       score  = 0
-      result = prefix: prefix, count :0 , yes_Count : 0, maybe_Count : 0
+      result = prefix: prefix, count :0 , yes_Count : 0, most_Count : 0, some_Count : 0, no_Count : 0
 
       for item in radar_Fields.axes when prefix.starts_With item.key              # todo: find better solution to get this value
         result.count = item.size
 
       for key,data of team_Data?.activities when key.starts_With(prefix)           #
         value = data.value
+        #console.log {value}
+        #console.log {prefix}
         #result.count++
-        if value is @.key_Yes                                                       # add Yes value
+        if value == @.key_Yes                                                       # add Yes value 1
           result.yes_Count++
-        if value is @.key_Maybe                                                     # add Maybe value
-          result.maybe_Count++
-      score = ((result.yes_Count * @.score_Yes) + (result.maybe_Count * @.score_Maybe)) / result.count
+        if value == @.key_Most                                                     # add Most value 0.66
+          result.most_Count++
+        if value == @.key_Some                                                     # add Some value 0.33
+          result.some_Count++
+        if value == @.key_No                                                     # add No value 0
+          result.no_Count++
+          
+      score = ((result.yes_Count * @.score_Yes) + (result.most_Count * @.score_Most)+ (result.some_Count * @.score_Some)+ (result.no_Count * @.score_No)) / result.count
+      #console.log {result.count}
       if score
         return (score * @.score_Max).to_Decimal()                                   # use to_Decimal, due to JS Decimal addition bug
       return 0.1
